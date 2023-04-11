@@ -1,0 +1,405 @@
+<pre>
+  BIP: ??
+  Title: Ordinals view metadata standard.
+  Author: Piotr Swierzy <piotr.swierzy@blockydevs.com>
+          Bartosz Solka <bartosz.solka@blockydevs.com>
+          Maciej Malik <maciej.malik@silksh.pl>
+          Mariusz Jasuwienas <mariusz.jasuwienas@silksh.pl>
+  Comments-Summary: No comments yet.
+  Comments-URI: ??
+  Status: Draft
+  Type: Informational
+  Created: 2023-03-16
+  License: PD
+</pre>
+
+==Abstract==
+
+The intent is to provide a flexible specification which will serve as the base format for all Ordinals’s metadata.
+
+Ordinals’s inscribed to this specification will be able to be served by explorers, wallets and other applications, allowing those applications to display a minimum amount of information regardless of the use case of the Ordinals.
+
+==Motivation==
+Ordinals creators often desire to include an image and supplemental metadata that is associated with the ordinal. This specification provides a recommended standard for referencing and processing ordinal metadata stored alongside the inscription data on-chain accordingly to this [./bip.mediawiki BIP].
+
+This standard has been developed based on standards from other blockchains with the intent of providing a flexible and robust schema for Ordinals metadata to address the following points:
+
+# Define a standard that is robust and flexible to allow the wide variety of Ordinal projects to be able to use it.
+# Set a common ‘base set’ of fields that arbitrary inscription types can follow, which will allow wallets and galleries to be able to display a basic set of Ordinals data irregardless of the special features
+# Provide a mechanism for projects to specify their specific schema (the ‘format’ parameter), to allow for sub-schemas to be developed.
+# Define a standard that allows for the creation of on-chain ordinals collections.
+== Description ==
+
+=== Design ===
+The Ordinals metadata standard has been developed based on standards from other blockchains. Many views and use cases were taken into consideration, such as:
+
+# Minimum required information to display any kind of NFT
+# Flexibility and Robustness
+# Compatibility with existing NFT standards (Ethereum and Solana’s Open Sea standard, Hedera HIP-412)
+# Additional off-chain ordinal data - Documents, Videos, Music, 3D Models
+# Additional off-chain ordinal files
+
+The rationale for specific fields is provided in the section Rationale below.
+
+=== Specification ===
+Following this BIP[./bip.mediawiki], these fields need to be defined with the values given below when inscribing the Ordinal with this metadata standard:
+<pre>
+OP_FALSE
+OP_IF
+  OP_PUSH "metadata"
+  OP_1
+  OP_PUSH "ordinals_view_1.0.0"
+  OP_0
+  OP_PUSH "<metadata json>"
+OP_ENDIF
+</pre>
+
+Below is the human-readable schema, presented to maximize clarity. This document also includes a Formal JSON Schema definition to assist in data validation and describe the data in formal terms. See the Formal JSON Schema Definition section below.
+<pre>
+{
+	"name": "Ordinal Name - REQUIRED",
+	"creator": "artist",
+	"ordinal_type": "ordinal type",
+	"author_address": "author address",
+	"description": "human readable description of the asset - RECOMMENDED",
+
+	"collection_data" : { // OPTIONAL object that contains basic general collection data, as specific collection data to this ordinal
+            "collection_signature": "collection name keccak256 hash authors signature - REQUIRED",
+            "description": "human readable description of the collection - RECOMMENDED",
+            "total_supply": "total supply of the ordinals in this collection, 0 if infinite - REQUIRED",
+            "ordinal_collection_index": "index of the specific ordinal in this collection - REQUIRED"
+	},
+
+	"files": [ // It is an optional array of objects with URI, type, and metadata fields.
+		{
+			"uri": "uri to file - REQUIRED",
+			"checksum": "cryptographic keccak256 hash of the representation of the resource the author expects to load - OPTIONAL",
+			"type": "mime type - REQUIRED",
+			"metadata": "metadata object - OPTIONAL",
+			"metadata_uri": "uri to metadata - OPTIONAL"
+		},
+		… multiple …
+	],
+	"properties": {
+		// arbitrary json objects that cover the overarching properties of the token
+	},
+	"attributes": [ // It is an optional array of attributes
+	    {
+            "trait_type": "Name of trait - REQUIRED",
+            "display_type" "Sets the representation of the value of the trait - OPTIONAL",
+            "value": "Value for trait - REQUIRED",
+            "max_value": "Maximum value for trait - OPTIONAL"
+        },
+        … multiple …
+    	],
+	"localization": {
+		"uri": "uri to file, using format: <protocol>://<hash>/{locale}.json - REQUIRED",
+		"default": "two-letter language code identifying default language for NFT specification - REQUIRED",
+		"locales": "array containing two-letter language codes identifying other localized metadata specifications for this NFT - REQUIRED"
+	}
+	// additional fields defined per the format
+}
+</pre>
+
+== Required, Optional and Conditionally Optional fields: ==
+
+Name is required for all NFT’s as part of this BIP. The description field is optional, but recommended to enable apps to display them better.
+
+The ordinal_type field is optional and specifies the oridnal type for e.g PFP, BEP-20.
+
+creator, author_address, collection_data, attributes, files, properties and localization are optional and do not need to be included in the metadata.
+
+== Discussion ==
+
+=== Rationale ===
+
+The author_address field defines the bitcoin address of the ordinals' author.
+
+The collection_name field defines the name of the collection.
+
+“collection_data” is an object with the following format:
+<pre>
+{
+    "collection_name": "collection name - REQUIRED",
+    "collection_signature": "collection name keccak256 hash authors signature - REQUIRED",
+    "description": "human readable description of the collection - RECOMMENDED",
+    "total_supply": "total supply of the ordinals in this collection, 0 if infinite - REQUIRED",
+    "ordinal_collection_index": "index of the specific ordinal in this collection - REQUIRED"
+}
+</pre>
+"collection_name" is REQUIRED. It is the name of the collection
+"description" is RECOMMENDED. It is a human readable description of the collection,
+"collection_signature" is REQUIRED. It is a signed keccak256 hash of the "collection_name" by the authors private key.
+"total_supply" is REQUIRED. It is the total supply of the ordinals in this collection, 0 if infinite.
+"ordinal_collection_index" is REQUIRED. It is the index of the specific ordinal in this collection.
+
+creator
+
+A string for the creator, or for multiple creators to be attributed use comma separated values.
+
+Eg. “John Doe” or “John Doe, Jill Doe”
+
+files
+
+“files” is an array of objects with the following format:
+<pre>
+{
+	"uri": "uri to file - REQUIRED",
+	"checksum": "cryptographic keccak256 hash of the representation of the resource the author expects to load - OPTIONAL",
+	"type": "mime type - REQUIRED",
+	"metadata": "metadata object - OPTIONAL",
+	"metadata_uri": "uri to metadata - OPTIONAL"
+}
+</pre>
+“uri” is the uri to the file.
+
+“checksum” is an optional cryptographic SHA-256 hash of the representation of the resource the author expects to load.
+
+“type” is required and is the mime-type of the file pointed to by the uri.
+
+“metadata” is optional. This is a nested metadata object for the file, which follows the same metadata format as the root metadata. Files can be nested indefinitely in this way, but processed with the same metadata code.
+
+“metadata_uri” is optional. There are situations (such as mutable metadata) where rather than including the “metadata” object it makes sense to point to a different file. Therefore this is a URI that points to a metadata json file for the file in question.
+
+To avoid conflicts, if “metadata” is defined then “metadata_uri” should be ignored.
+
+An Ordinal creator has the option of using either “metadata” or “metadata_uri”. Metadata should be considered the default behaviour as it minimizes the number of calls that need to be made. Metadata_uri should be used in specific situations where defining the metadata object within the base metadata file is inadequate.
+format
+
+For the optional fields of attributes and properties, as well as any additional fields above the required fields described in this schema, “format” defines the specific schema which is used by this Ordinal. This allows Ordinal creators, communities and platforms to explicitly define the schema that they are using, which simplifies implementation for other projects hoping to use the same definition.
+
+“properties” is defined as a collection of arbitrary fields and is the only optional field that is explicitly defined in the base schema.
+
+The intention of “properties” is to provide a common place for information to be stored about the token. Future schema should use properties to include any additional information that is intended to be parsed by a generic text parser for display. For example, a “license” field could be defined with the value “Creative Commons Attribution 4.0 International”, and a gallery could parse through properties and display it dynamically without advance knowledge of the field.
+
+It is not in the scope of this schema to define field naming standards or common fields. It is recommended for the community to create a standards body for this purpose.
+
+URI’s shall follow the following format: protocol://resource_location
+
+Mime Formatting
+
+Mime formatting shall follow the following format: type/subtype
+
+As a rule, mime types are all lower case. However apps should be programmed to accept any case for robustness.
+
+A list of common mime types can be found here: https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
+
+
+== Reference Implementation ==
+= Formal JSON Schema Definition =
+The following is the formal definition of this schema using JSON Schema notation. JSON Schema assists in metadata validation and describes the data in the schema in more formal terms. Despite looking like JSON, this is NOT how actual metadata should look. If you are creating the metadata file for an NFT do not use this definition as a reference.
+
+For more info see here [https://json-schema.org/]
+
+<pre>
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "version": "2.0.0",
+    "additionalProperties": false,
+    "properties":
+    {
+        "name":
+        {
+            "type": "string",
+            "description": "Identifies the asset to which this token represents."
+        },
+        "creator":
+        {
+            "type": "string",
+            "description": "Identifies the artist name(s)."
+        },
+        "description":
+        {
+            "type": "string",
+            "description": "Describes the asset to which this token represents."
+        },
+        "properties":
+        {
+            "type": "object",
+            "description": "Holds any arbitrary properties. Values may be strings, numbers, booleans, objects or arrays."
+        },
+        "collection_data":
+        {
+            "type": "object",
+            "properties":
+            {
+                "collection_name":
+                {
+                    "type": "string",
+                    "description": "Identifies the ordinals collection name."
+                },
+                "description":
+                {
+                    "type": "string",
+                    "description": "Human readable description of the collection."
+                },
+                "collection_signature":
+                {
+                    "type": "string",
+                    "description": "It is a signed keccak256 hash of the \"collection_name\" by the authors private key."
+                },
+                "total_supply":
+                {
+                    "type": "number",
+                    "description": "total supply of the ordinals in this collection, 0 if infinite."
+                },
+                "ordinal_collection_index":
+                {
+                    "type": "number",
+                    "description": "index of the specific ordinal in this collection."
+                },
+                "required":
+                [
+                    "collection_name",
+                    "collection_signature",
+                    "total_supply",
+                    "ordinal_collection_index"
+                ],
+                "additionalProperties": false
+            }
+        },
+        "files":
+        {
+            "type": "array",
+            "items":
+            {
+                "type": "object",
+                "properties":
+                {
+                    "uri":
+                    {
+                        "type": "string",
+                        "format": "uri",
+                        "description": "A URI pointing to a resource."
+                    },
+                    "type":
+                    {
+                        "type": "string",
+                        "description": "Sets the MIME type for the 'image' resource."
+                    },
+                    "metadata":
+                    {
+                        "type": "object",
+                        "description": "Represents a nested metadata object for the file, which follows the same metadata format as the root metadata. Files can be nested indefinitely in this way, but processed with the same metadata code."
+                    },
+                    "metadata_uri":
+                    {
+                        "type": "string",
+                        "format": "uri",
+                        "description": "A URI pointing to a metadata resource, which follows the same metadata format as the root metadata. Files can be nested indefinitely in this way, but processed with the same metadata code."
+                    }
+                },
+                "required":
+                [
+                    "uri",
+                    "type"
+                ],
+                "additionalProperties": false
+            }
+        },
+        "attributes":
+        {
+            "type": "array",
+            "items":
+            {
+                "type": "object",
+                "properties":
+                {
+                    "trait_type":
+                    {
+                        "type": "string",
+                        "description": "Name of trait."
+                    },
+                    "display_type":
+                    {
+                        "type": "string",
+                        "description": "Sets the representation of the value of the trait."
+                    },
+                    "value":
+                    {
+                        "type":
+                        [
+                            "string",
+                            "integer",
+                            "number",
+                            "boolean"
+                        ],
+                        "description": "Value for trait."
+                    },
+                    "max_value":
+                    {
+                        "type":
+                        [
+                            "string",
+                            "integer",
+                            "number"
+                        ],
+                        "description": "Maximum value for trait."
+                    }
+                },
+                "required":
+                [
+                    "trait_type",
+                    "value"
+                ],
+                "additionalProperties": false
+            }
+        },
+        "localization":
+        {
+            "type": "object",
+            "required":
+            [
+                "uri",
+                "default",
+                "locales"
+            ],
+            "properties":
+            {
+                "uri":
+                {
+                    "type": "string",
+                    "description": "The URI pattern to fetch localized data from. This URI should contain the substring `{locale}` which will be replaced with the appropriate two-letter langauge code value before sending the request. Format: <protocol>://<hash>/{locale}.json"
+                },
+                "default":
+                {
+                    "type": "string",
+                    "description": "Sets the two-letter language code that represents the default locale for this metadata file."
+                },
+                "locales":
+                {
+                    "type": "array",
+                    "description": "The list of locales for which data is available.",
+                    "items":
+                    {
+                        "type": "string"
+                    }
+                }
+            },
+            "additionalProperties": false
+        }
+    },
+    "required":
+    [
+        "name"
+    ]
+}
+</pre>
+== References ==
+
+See ordinal number theory [https://github.com/casey/ord/edit/master/bip.mediawiki]
+
+For the Ordinal Theory Handbook see [https://docs.ordinals.com/overview.html]
+
+See the HIP412 on Hedera [https://hips.hedera.com/hip/hip-412]
+
+See the ERC721 Non-Fungible Token Standard [https://github.com/ethereum/EIPs/blob/master/EIPS/eip-721.md]
+
+See the Standard for the inscription of metadata [./bip.mediawiki Metadata BIP]
+
+
+
+
+
+
