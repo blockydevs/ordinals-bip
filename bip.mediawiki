@@ -18,7 +18,7 @@
 This document specifies a standard to additionally inscribe inscriptions with metadata
 
 ==Motivation==
-Casey Rodarmor introduced in his Ordinal Theory Handbook <https://docs.ordinals.com/inscriptions.html> a mechanism to inscribe sats with arbitrary content, creating bitcoin-native digital artifacts. The proposed mechanism allows to inscribe an arbitrary sat with the content type, and the content itself.
+Casey Rodarmor introduced in his Ordinal Theory Handbook [https://docs.ordinals.com/inscriptions.html] a mechanism to inscribe sats with arbitrary content, creating bitcoin-native digital artifacts. The proposed mechanism allows to inscribe an arbitrary sat with the content type, and the content itself.
 
 This allows for the creation of ordinals that contain arbitrary data, but it does not define a standard to additionally append data describing the ordinal itself.
 
@@ -29,7 +29,7 @@ This standard describes how to additionally inscribe the sat with its metadata.
 === Design ===
 Inscriptions inscribe sats with arbitrary content, creating bitcoin-native digital artifacts, more commonly known as NFTs. Inscriptions do not require a sidechain or separate token.
 
-The inscription content model described in Ordinal Theory Handbook <https://docs.ordinals.com/inscriptions.html> is that of the web. An inscription consists of a content type, also known as a MIME type, and the content itself, which is a byte string. This allows inscription content to be returned from a web server, and for creating HTML inscriptions that use and remix the content of other inscriptions.
+The inscription content model described in Ordinal Theory Handbook [https://docs.ordinals.com/inscriptions.html] is that of the web. An inscription consists of a content type, also known as a MIME type, and the content itself, which is a byte string. This allows inscription content to be returned from a web server, and for creating HTML inscriptions that use and remix the content of other inscriptions.
 
 Inscription content is entirely on-chain, stored in taproot script-path spend scripts. Taproot scripts have very few restrictions on their content, and additionally receive the witness discount, making inscription content storage relatively economical.
 
